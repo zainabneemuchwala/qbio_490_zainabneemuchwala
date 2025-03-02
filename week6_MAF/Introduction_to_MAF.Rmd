@@ -18,14 +18,26 @@ In this assignment, you will need to use your skills learned in class to demonst
 *Pre-Assignment*
 Load all necessary packages, read in the clinical data.csv file you have in your analysis_data folder, and instantiate the MAF_object.
 ```{r}
+library(BiocManager)
+library(TCGAbiolinks)
+library(maftools)
+clin_query <- GDCquery(project = "TCGA-BRCA", data.category = "Clinical", data.type = "Clinical Supplement", data.format = 'BCR Biotab')
 
+clinical.BCRtab.all <- GDCprepare(clin_query)
+clinic <- clinical.BCRtab.all$clinical_patient_brca[-c(1,2),]
+colnames(clinic)[ colnames(clinic) == "bcr_patient_barcode" ] <-"Tumor_Sample_Barcode"
+maf_query <- GDCquery(project = "TCGA-BRCA", data.category = "Simple Nucleotide Variation", access = "open", data.type = "Masked Somatic Mutation", workflow.type = "Aliquot Ensemble Somatic Variant Merging and Masking")
+GDCdownload(maf_query)
+maf <- GDCprepare(maf_query)
+maf_object <- read.maf(maf = maf,clinicalData = clinic, isTCGA = TRUE)
 ```
 
 
 *1*
 Choose a clinical variable (or any variable from clin_rad or clin_drug) to separate your populations into two different groups and rewrite the column or create a new column with that variable as a factor. ***Do not use age or vital_status as your clinical variable.*** Hint: if your variable is continuous, you will need to determine your own cutoffs for the different levels of the factor. If your variable is categorical and has more than two possible values, choose the two that are the most common.
 ```{r}
-
+clinic$ER_status <- ifelse(clinic$er_status_by_ihc == "Positive", "ER+", "ER-")
+clinic$ER_status <- as.factor(clinic$ER_status)
 ```
 
 
@@ -33,7 +45,15 @@ Choose a clinical variable (or any variable from clin_rad or clin_drug) to separ
 Create a co-oncoplot with the top 10-20 (you choose) most mutated genes for the two groups. Pick one that has a large discrepancy in % mutated or type of mutations between the groups and research it. 
 Research it. What is the gene used for? Can you think of any reason for the discrepancy?
 ```{r}
+maf_ERplus <- subsetMaf(maf_object, clinQuery = "ER_status == 'ER+'")
+maf_ERminus <- subsetMaf(maf_object, clinQuery = "ER_status == 'ER-'")
 
+# Create co-oncoplot for top 15 most mutated genes
+coOncoplot(m1 = maf_ERplus, 
+           m2 = maf_ERminus, 
+           m1Name = "ER+", 
+           m2Name = "ER-", 
+           genes = 15)
 ```
 
 
@@ -41,7 +61,16 @@ Research it. What is the gene used for? Can you think of any reason for the disc
 Create a contingency table with your variable and chosen gene. Run a Fisher’s Exact Test between presence of mutations for that gene and your clinical variable. Create and save a mosaic plot. 
 Interpret the output of the Fisher’s Exact Test in terms of the odds ratio and p-value.
 ```{r}
+clinic$TP53_mutated <- ifelse(clinic$Tumor_Sample_Barcode %in% maf_object@gene.summary[maf_object@gene.summary$Hugo_Symbol == "TP53",]$Tumor_Sample_Barcode, "Mutated", "Wild-Type")
+cont_table <- table(clinic$ER_status, clinic$TP53_mutated)
+print(cont_table)
 
+# Fisher's Exact Test
+fisher_test <- fisher.test(cont_table)
+print(fisher_test)
+
+# mosaic plot
+mosaicplot(cont_table, col = c("blue", "pink"), main = "TP53 Mutation and ER Status")
 ```
 
 
@@ -49,7 +78,11 @@ Interpret the output of the Fisher’s Exact Test in terms of the odds ratio and
 Subset your maf_object based on your chosen clinical variable and create a co-lollipop plot of your chosen gene divided between the two different clinical variable possibilities. Include descriptive names on your plot.
 Do you notice any difference in terms of mutations (e.g. sites, types, number) between the two populations?
 ```{r}
-
+lollipopPlot2(m1 = maf_ERplus, 
+              m2 = maf_ERminus, 
+              m1_name = "ER+", 
+              m2_name = "ER-", 
+              gene = "TP53")
 ```
 
 
@@ -57,5 +90,9 @@ Do you notice any difference in terms of mutations (e.g. sites, types, number) b
 Create your Overall_Survival_Status column and create a mafSurvival KM plot based on mutations in your chosen gene.
 Does there seem to be a difference? Hypothesize why or not based on the other analysis you did with the gene above.
 ```{r}
-
+clinic$Overall_Survival_Status <- ifelse(clinic$vital_status == "Dead", 1, 0)
+mafSurvival(maf = maf_object, 
+            genes = "TP53", 
+            time = "days_to_last_followup", 
+            Status = "Overall_Survival_Status")
 ```
