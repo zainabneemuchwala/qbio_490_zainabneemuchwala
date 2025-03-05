@@ -55,7 +55,7 @@ coOncoplot(m1 = maf_ERplus,
            m2Name = "ER-", 
            genes = 15)
 ```
-
+One commonly observed gene with significant differences in mutation rates between tumor and tumor-free groups is TP53. TP53 mutations are frequently found in various cancers, with much higher prevalence in tumor samples compared to normal tissues. TP53 works in DNA damage repair halts the cell cycle to allow for DNA repair or triggers apoptosis if the damage is irreparable. A possibe reason for this discrepancy is that one commonly observed gene with significant differences in mutation rates between tumor and tumor-free groups is TP53. TP53 mutations are frequently found in various cancers, with much higher prevalence in tumor samples compared to normal tissues. TP53 works in DNA damage repair halts the cell cycle to allow for DNA repair or triggers apoptosis if the damage is irreparable.
 
 *3*
 Create a contingency table with your variable and chosen gene. Run a Fisher’s Exact Test between presence of mutations for that gene and your clinical variable. Create and save a mosaic plot. 
@@ -72,7 +72,9 @@ print(fisher_test)
 # mosaic plot
 mosaicplot(cont_table, col = c("blue", "pink"), main = "TP53 Mutation and ER Status")
 ```
+The results of Fisher’s Exact Test indicate that the p-value is 0.1432, which is above the typical significance threshold of 0.05. This suggests that there is no statistically significant association between the two groups (tumor-free and tumor-present) in the analyzed dataset.
 
+The odds ratio is 1.469, meaning that tumor-free individuals are 1.47 times more likely to have the characteristic in question compared to individuals with tumors. However, since the p-value is not statistically significant, this observed difference could be due to chance rather than a meaningful biological association.
 
 *4*
 Subset your maf_object based on your chosen clinical variable and create a co-lollipop plot of your chosen gene divided between the two different clinical variable possibilities. Include descriptive names on your plot.
@@ -84,7 +86,7 @@ lollipopPlot2(m1 = maf_ERplus,
               m2_name = "ER-", 
               gene = "TP53")
 ```
-
+The Tumor-Free group has a higher percentage of individuals with PIK3CA mutations (35.45%) compared to the Tumor group (27.16%), suggesting a potential difference in the role of PIK3CA mutations between the two populations. Additionally, the types and distribution of mutations appear similar, with missense mutations being the most common, but the Tumor-Free group has more mutations overall, which may indicate a different selective pressure or functional consequence in tumor development.
 
 *5*
 Create your Overall_Survival_Status column and create a mafSurvival KM plot based on mutations in your chosen gene.
@@ -96,3 +98,4 @@ mafSurvival(maf = maf_object,
             time = "days_to_last_followup", 
             Status = "Overall_Survival_Status")
 ```
+The survival plot shows no statistically significant difference between the mutant and wild-type (WT) groups, as indicated by the p-value of 0.586 and a hazard ratio of 0.883, which is close to 1. This suggests that PIK3CA mutations do not strongly impact overall survival in this dataset. One possible explanation for this is that PIK3CA mutations may not be the primary driver of tumor progression or aggressiveness but rather contribute to tumor initiation or maintenance. Additionally, since PIK3CA mutations were more frequent in tumor-free individuals, this could indicate that in some contexts, these mutations do not always lead to worse outcomes, or their effects may be counteracted by other genetic or environmental factors. This aligns with our earlier observation that PIK3CA mutations are more common in the tumor-free group, suggesting they may play a different role than typically expected in cancer progression.
